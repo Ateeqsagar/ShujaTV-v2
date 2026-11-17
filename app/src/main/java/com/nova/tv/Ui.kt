@@ -1228,6 +1228,11 @@ fun SettingsScreen(vm: Vm) {
                 item { SectionTitle("Sources") }
                 item { SettingRow("Sources & repos", "${Sources.all(ctx).count { it.on }} on  >") { showSources = true } }
                 item { SettingRow("Refresh all content", "Reload lists") { vm.refreshAll(); toast("Reloading content") } }
+                item {
+                    var hide by remember { mutableStateOf(Health.enabled(ctx)) }
+                    SettingRow("Hide dead channels", if (hide) "On" else "Off") { hide = !hide; vm.setHideDead(hide) }
+                }
+                item { SettingRow("Test all channels now", vm.healthNote.ifBlank { "Start" }) { vm.checkChannels(true); toast("Testing channels in the background") } }
 
                 item { SectionTitle("Playback") }
                 item { SettingRow("Live stream format", pick(FORMATS, c.liveFormat)) { vm.updateCfg(c.copy(liveFormat = (c.liveFormat + 1) % FORMATS.size)) } }

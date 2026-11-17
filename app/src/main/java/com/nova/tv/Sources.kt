@@ -31,6 +31,7 @@ data class Src(
 
 object Sources {
     private const val IPTV = "https://iptv-org.github.io/iptv/"
+    private const val DB = "https://dearbulut.github.io/iptv/playlists/"
 
     /**
      * Free, publicly available sources only: the community iptv-org lists (free-to-air / official public streams),
@@ -39,19 +40,31 @@ object Sources {
      * Order matters: Pakistan first, then India, then the rest.
      */
     val BUILTIN: List<Src> = listOf(
-        // ---- Pakistan ----
+        // ---- Pakistan (health-checked lists first, then the big community list as backup) ----
+        Src("Pakistan - checked list", DB + "country/pk.m3u", 1, "PK", builtin = true),
+        Src("Urdu channels - checked list", DB + "language/urd.m3u", 1, "Urdu", builtin = true),
         Src("Pakistan - all channels", IPTV + "countries/pk.m3u", 1, "PK", builtin = true),
         Src("Urdu language channels", IPTV + "languages/urd.m3u", 1, "Urdu", builtin = true),
+        Src("Punjabi channels - checked list", DB + "language/pan.m3u", 1, "Punjabi", builtin = true),
         Src("Punjabi language channels", IPTV + "languages/pan.m3u", 1, "Punjabi", builtin = true),
         // ---- India ----
+        Src("India - checked list", DB + "country/in.m3u", 1, "IN", builtin = true),
+        Src("Hindi channels - checked list", DB + "language/hin.m3u", 1, "Hindi", builtin = true),
         Src("India - all channels", IPTV + "countries/in.m3u", 1, "IN", builtin = true),
         Src("Hindi language channels", IPTV + "languages/hin.m3u", 1, "Hindi", builtin = true),
+        Src("Tamil channels - checked list", DB + "language/tam.m3u", 1, "Tamil", builtin = true),
         Src("Tamil language channels", IPTV + "languages/tam.m3u", 1, "Tamil", builtin = true),
+        Src("Telugu channels - checked list", DB + "language/tel.m3u", 1, "Telugu", builtin = true),
         Src("Telugu language channels", IPTV + "languages/tel.m3u", 1, "Telugu", builtin = true),
+        Src("Bengali channels - checked list", DB + "language/ben.m3u", 1, "Bengali", builtin = true),
         Src("Bengali language channels", IPTV + "languages/ben.m3u", 1, "Bengali", builtin = true),
         // ---- Movies and series (free) ----
         Src("Classic Hindi / Bollywood films (Internet Archive)", "archive:subject:(bollywood OR \"hindi film\" OR \"hindi movie\") AND mediatype:movies", 2, "Hindi Films", builtin = true),
         Src("Urdu / Pakistani films (Internet Archive)", "archive:subject:(urdu OR pakistani OR lollywood) AND mediatype:movies", 2, "Urdu Films", builtin = true),
+        Src("Punjabi films (Internet Archive)", "archive:subject:(punjabi OR \"punjabi film\") AND mediatype:movies", 2, "Punjabi Films", builtin = true),
+        Src("Tamil / Telugu films (Internet Archive)", "archive:subject:(tamil OR telugu) AND mediatype:movies", 2, "South Indian Films", builtin = true),
+        Src("Bengali films (Internet Archive)", "archive:subject:(bengali OR bangla) AND mediatype:movies", 2, "Bengali Films", builtin = true),
+        Src("Indian & Pakistani documentaries (Internet Archive)", "archive:subject:(india OR pakistan) AND subject:documentary AND mediatype:movies", 2, "Documentaries", builtin = true),
         Src("Public-domain feature films (Internet Archive)", "archive:collection:feature_films AND mediatype:movies", 2, "Classics", builtin = true),
         Src("Movie channels", IPTV + "categories/movies.m3u", 1, "Movies", builtin = true),
         Src("Series channels", IPTV + "categories/series.m3u", 1, "Series", builtin = true),
@@ -64,8 +77,7 @@ object Sources {
         Src("Comedy", IPTV + "categories/comedy.m3u", 1, "Comedy", builtin = true),
         Src("Documentary", IPTV + "categories/documentary.m3u", 1, "Docs", builtin = true),
         Src("Religious", IPTV + "categories/religious.m3u", 1, "Religious", builtin = true),
-        Src("Free-TV worldwide", "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8", 1, "Free-TV", builtin = true),
-        Src("Pluto TV (free)", "https://i.mjh.nz/PlutoTV/all.m3u8", 1, "Pluto", builtin = true)
+        Src("Free-TV worldwide", "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8", 1, "Free-TV", builtin = true)
     )
 
     // ---------- storage: custom repos + switched-off built-ins ----------

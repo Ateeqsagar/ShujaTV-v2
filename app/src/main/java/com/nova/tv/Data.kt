@@ -650,8 +650,17 @@ class Vm(app: Application) : AndroidViewModel(app) {
         if (a.mode != 0) {
             val data = if (a.mode == 2) Sources.loadAll(Sources.all(getApplication<Application>()), ua()) else M3u.load(a.host.trim(), ua())
             if (data.items.values.sumOf { it.size } == 0) throw IllegalStateException("No channels found in this playlist")
+            val ctx = getApplication<Application>()
             val built = withContext(Dispatchers.Default) {
-                (0..2).map { t -> buildLib(data.cats[t] ?: emptyList(), data.items[t] ?: emptyList()) }
+                (0..2).map { t ->
+                    val its = data.items[t] ?: emptyList()
+                    val use = if (t == T_LIVE && a.mode == 2) Health.dropDead(ctx, its) else its
+                    buildLib(data.cats[t] ?: emptyList(), use)
+                }
+            }
+            if (a.mode == 2) {
+                liveAll = data.items[T_LIVE] ?: emptyList()
+                liveCats = data.cats[T_LIVE] ?: emptyList()
             }
             api = null; account = a; info = AcctInfo(if (a.mode == 2) "Free sources" else "Playlist")
             m3uEps = data.eps
@@ -667,6 +676,56 @@ class Vm(app: Application) : AndroidViewModel(app) {
         lastLoad = System.currentTimeMillis()
         if (firstSignIn) showIntro = true
         if (a.mode == 0) startLoading()
+        if (a.mode == 2) checkChannels()
+    }
+
+    // ---- channel health check (hides dead / blocked live channels) ----
+    var healthNote by mutableStateOf(""); private set
+    private var healthJob: Job? = null
+    private var liveAll: List<Item> = emptyList()
+    private var liveCats: List<Category> = emptyList()
+
+    private suspend fun rebuildLive() {
+        val ctx = getApplication<Application>()
+        val keep = Health.dropDead(ctx, liveAll)
+        if (keep.isEmpty()) return
+        val lib = withContext(Dispatchers.Default) { buildLib(liveCats, keep) }
+        libs[T_LIVE] = lib
+    }
+
+    /** Tests live channels in the background; dead ones disappear from the list when the test is done. */
+    fun checkChannels(force: Boolean = false) {
+        val ctx = getApplication<Application>()
+        healthJob?.cancel()
+        if (liveAll.isEmpty() || !Health.enabled(ctx)) return
+        if (force) Health.clear(ctx)
+        healthJob = viewModelScope.launch {
+            try {
+                val todo = Health.unknown(ctx, liveAll)
+                if (todo.isNotEmpty()) {
+                    healthNote = "Checking ${todo.size} channels..."
+                    val ok = Health.probe(ctx, todo, ua())
+                    if (ok < 0) { healthNote = "Check skipped (no internet?)"; return@launch }
+                }
+                rebuildLive()
+                val shown = Health.dropDead(ctx, liveAll).size
+                healthNote = "${liveAll.size - shown} dead channels hidden"
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                healthNote = ""
+            }
+        }
+    }
+
+    fun setHideDead(on: Boolean) {
+        val ctx = getApplication<Application>()
+        Health.setEnabled(ctx, on)
+        if (on) checkChannels() else {
+            healthJob?.cancel()
+            healthNote = ""
+            viewModelScope.launch { rebuildLive() }
+        }
     }
 
     fun finishIntro() { showIntro = false }
